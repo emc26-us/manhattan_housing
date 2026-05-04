@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Artificial Price of Shelter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --grey-light: #e8e8e2;
+    --grey-mid: #b0b0a8;
+    --grey-dark: #404040;
+    --accent: #0a0a0a;
+    --serif: 'Playfair Display', Georgia, serif;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', Helvetica, sans-serif;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  /* ── SLIDE WRAPPER ─────────────────────────────────────── */
+  .deck {
+    width: 100vw; height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 6vh 8vw;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    background: var(--black);
+    overflow: hidden;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── DECORATIVE ELEMENTS ───────────────────────────────── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--white);
+    opacity: 0.15;
+  }
+
+  .slide-num {
+    position: absolute;
+    bottom: 5vh; right: 6vw;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--grey-dark);
+    letter-spacing: 0.15em;
+  }
+
+  .slide-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 2.5vh;
+    display: flex; align-items: center; gap: 1rem;
+  }
+
+  .slide-tag::before {
+    content: '';
+    display: inline-block;
+    width: 32px; height: 1px;
+    background: var(--grey-mid);
+  }
+
+  /* ── TYPOGRAPHY ────────────────────────────────────────── */
+  .display {
+    font-family: var(--serif);
+    font-weight: 900;
+    line-height: 1.0;
+    color: var(--white);
+  }
+
+  .display-xl { font-size: clamp(3.5rem, 8vw, 7rem); }
+  .display-lg { font-size: clamp(2.5rem, 5.5vw, 5rem); }
+  .display-md { font-size: clamp(1.8rem, 3.5vw, 3.2rem); }
+
+  .subtitle {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: clamp(0.9rem, 1.6vw, 1.3rem);
+    color: var(--grey-mid);
+    line-height: 1.6;
+    max-width: 65ch;
+    margin-top: 2.5vh;
+  }
+
+  .body-text {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+    line-height: 1.75;
+    color: var(--grey-light);
+    max-width: 70ch;
+  }
+
+  .italic-serif {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* ── BIG NUMBER STAT ───────────────────────────────────── */
+  .stat-block {
+    display: flex; flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .stat-number {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    color: var(--white);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: clamp(0.75rem, 1.2vw, 1rem);
+    color: var(--grey-mid);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── DIVIDER ───────────────────────────────────────────── */
+  .rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--white) 0%, transparent 80%);
+    opacity: 0.15;
+    margin: 3vh 0;
+  }
+
+  .rule-short {
+    width: 60px; height: 1px;
+    background: var(--white);
+    opacity: 0.4;
+    margin: 2vh 0;
+  }
+
+  /* ── TABLE ─────────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: clamp(0.65rem, 1.1vw, 0.85rem);
+    margin-top: 2vh;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 0.7rem 1rem;
+    background: var(--white);
+    color: var(--black);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+
+  .data-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--grey-light);
+    font-weight: 300;
+  }
+
+  .data-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+
+  .data-table .highlight td {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  .data-table .total-row td {
+    background: var(--white);
+    color: var(--black);
+    font-weight: 500;
+    border: none;
+  }
+
+  .elim { color: #c8c8c8; font-weight: 500; }
+  .keep { color: var(--grey-mid); }
+
+  /* ── TWO COLUMN ────────────────────────────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5vw;
+    width: 100%;
+    margin-top: 3vh;
+  }
+
+  .col-block {
+    display: flex; flex-direction: column; gap: 1.2vh;
+  }
+
+  .col-head {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+    padding-bottom: 1vh;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 0.5vh;
+  }
+
+  .col-item {
+    font-family: var(--sans);
+    font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+    font-weight: 300;
+    color: var(--grey-light);
+    line-height: 1.5;
+    padding-left: 1rem;
+    border-left: 2px solid rgba(255,255,255,0.2);
+  }
+
+  /* ── BLOCKQUOTE ────────────────────────────────────────── */
+  .pullquote {
+    border-left: 3px solid var(--white);
+    padding-left: 2rem;
+    margin: 2vh 0;
+  }
+
+  .pullquote p {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+    line-height: 1.55;
+    color: var(--white);
+    font-weight: 400;
+  }
+
+  /* ── STATS ROW ─────────────────────────────────────────── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3vw;
+    width: 100%;
+    margin-top: 3vh;
+  }
+
+  .stat-card {
+    padding: 2.5vh 2vw;
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; flex-direction: column; gap: 0.8vh;
+  }
+
+  .stat-card .num {
+    font-family: var(--mono);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  .stat-card .lbl {
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 300;
+    color: var(--grey-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+  }
+
+  /* ── PROGRESS BAR ──────────────────────────────────────── */
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: var(--white);
+    opacity: 0.5;
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* ── CONTROLS ──────────────────────────────────────────── */
+  .controls {
+    position: fixed;
+    bottom: 3vh; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 2rem;
+    z-index: 100;
+  }
+
+  .ctrl-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.2);
+    color: var(--grey-mid);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .ctrl-btn:hover {
+    border-color: var(--white);
+    color: var(--white);
+  }
+
+  .ctrl-count {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--grey-dark);
+    letter-spacing: 0.15em;
+    min-width: 5rem;
+    text-align: center;
+  }
+
+  /* ── SCRIPT PANEL ──────────────────────────────────────── */
+  .script-toggle {
+    position: fixed;
+    top: 3vh; right: 3vw;
+    background: none; border: 1px solid rgba(255,255,255,0.15);
+    color: var(--grey-mid);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    z-index: 200;
+    transition: all 0.2s;
+  }
+
+  .script-toggle:hover { border-color: var(--white); color: var(--white); }
+
+  .script-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.96);
+    z-index: 150;
+    display: none;
+    flex-direction: column;
+    padding: 6vh 8vw;
+    overflow-y: auto;
+  }
+
+  .script-panel.open { display: flex; }
+
+  .script-panel h2 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4vh;
+    padding-bottom: 2vh;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .script-section {
+    margin-bottom: 4vh;
+    padding-bottom: 3vh;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .script-section h3 {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 1.5vh;
+  }
+
+  .script-section .timing {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--grey-dark);
+    float: right;
+    letter-spacing: 0.1em;
+  }
+
+  .script-section p {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--grey-light);
+    margin-bottom: 1.2vh;
+  }
+
+  .script-section .emphasis {
+    color: var(--white);
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .script-close {
+    position: sticky;
+    top: 0; right: 0;
+    align-self: flex-end;
+    background: none; border: 1px solid rgba(255,255,255,0.2);
+    color: var(--grey-mid);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    margin-bottom: 4vh;
+  }
+
+  /* ── TITLE SLIDE SPECIAL ───────────────────────────────── */
+  #slide-1 {
+    background: var(--black);
+  }
+
+  #slide-1 .bg-text {
+    position: absolute;
+    right: -2vw; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--serif);
+    font-size: clamp(8rem, 18vw, 16rem);
+    font-weight: 900;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* ── ENTER ANIMATION ────────────────────────────────────── */
+  .slide.active .anim-in {
+    animation: slideUp 0.6s ease forwards;
+  }
+
+  .slide.active .anim-in:nth-child(2) { animation-delay: 0.1s; }
+  .slide.active .anim-in:nth-child(3) { animation-delay: 0.2s; }
+  .slide.active .anim-in:nth-child(4) { animation-delay: 0.3s; }
+  .slide.active .anim-in:nth-child(5) { animation-delay: 0.4s; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide:not(.active) .anim-in { opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+<button class="script-toggle" onclick="toggleScript()">SPEAKER SCRIPT</button>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDES
+════════════════════════════════════════════════════════════ -->
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide active" id="slide-1">
+    <div class="bg-text">lose–lose</div>
+    <div class="slide-tag anim-in">Sociology — Class & Housing</div>
+    <h1 class="display display-xl anim-in">The Artificial<br><em>Price of Shelter</em></h1>
+    <div class="rule-short anim-in"></div>
+    <p class="subtitle anim-in">Manhattan rents are unaffordable to tenants. Yet landlords earn a <em>historically low</em> return on their assets. So who is actually winning — and why?</p>
+    <div class="rule anim-in"></div>
+    <div class="two-col anim-in" style="margin-top:0">
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        <span style="font-family:var(--mono); font-size:0.65rem; color:var(--grey-dark); letter-spacing:0.15em; text-transform:uppercase;">Cap Rate (actual)</span>
+        <span style="font-family:var(--mono); font-size:1.8rem; color:var(--grey-mid);">~3%</span>
+        <span style="font-family:var(--sans); font-size:0.75rem; color:var(--grey-dark); font-weight:300;">Landlord's annual yield on asset value — well below the historical norm of 6%</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        <span style="font-family:var(--mono); font-size:0.65rem; color:var(--grey-dark); letter-spacing:0.15em; text-transform:uppercase;">Median 1BR Rent</span>
+        <span style="font-family:var(--mono); font-size:1.8rem; color:var(--grey-mid);">$4,500<span style="font-size:1rem">/mo</span></span>
+        <span style="font-family:var(--sans); font-size:0.75rem; color:var(--grey-dark); font-weight:300;">96% of the median NYC renter's gross income — far beyond the 30% affordability threshold</span>
+      </div>
+    </div>
+    <div class="slide-num">01 / 08</div>
+  </div>
+
+  <!-- SLIDE 2: LOSE-LOSE PARADOX -->
+  <div class="slide" id="slide-2">
+    <div class="slide-tag anim-in">The Paradox</div>
+    <h2 class="display display-lg anim-in">High rent. Low yield.<br><em>Nobody wins.</em></h2>
+    <div class="rule anim-in"></div>
+    <div class="two-col anim-in">
+      <div class="col-block">
+        <div class="col-head">The Tenant's Problem</div>
+        <div class="col-item">Median 1BR rent: ~$4,500/month — requires $180,000 income to be affordable at 30%</div>
+        <div class="col-item">NYC median renter earns $56,000 — spending 96% of gross income on rent</div>
+        <div class="col-item">Rents are <em>too high</em> for the people who live here</div>
+      </div>
+      <div class="col-block">
+        <div class="col-head">The Landlord's Problem</div>
+        <div class="col-item">Manhattan cap rates have compressed to ~3% — the lowest in living memory</div>
+        <div class="col-item">Historical norm was 5–6%. At 3%, the asset is mispriced relative to its income</div>
+        <div class="col-item">Rents are <em>too low</em> to justify asset prices at any rational investment return</div>
+      </div>
+    </div>
+    <div class="rule anim-in"></div>
+    <div class="pullquote anim-in">
+      <p>If rent is simultaneously too high for tenants <em>and</em> too low for rational asset pricing — the price of the asset itself must be wrong. This report constructs what both the asset price and the rent <em>should</em> be.</p>
+    </div>
+    <div class="two-col anim-in" style="margin-top:1vh">
+      <div style="display:flex;flex-direction:column;gap:0.3rem;">
+        <span style="font-family:var(--mono);font-size:0.6rem;color:var(--grey-dark);letter-spacing:0.15em;text-transform:uppercase;">Fair Asset Price</span>
+        <span style="font-family:var(--mono);font-size:1.4rem;color:var(--white);">~$770<span style="font-size:0.9rem">/sqft</span></span>
+        <span style="font-family:var(--sans);font-size:0.72rem;color:var(--grey-dark);font-weight:300;">vs. actual ~$1,500/sqft</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.3rem;">
+        <span style="font-family:var(--mono);font-size:0.6rem;color:var(--grey-dark);letter-spacing:0.15em;text-transform:uppercase;">Fair Rent (1BR)</span>
+        <span style="font-family:var(--mono);font-size:1.4rem;color:var(--white);">~$3,887<span style="font-size:0.9rem">/mo</span></span>
+        <span style="font-family:var(--sans);font-size:0.72rem;color:var(--grey-dark);font-weight:300;">vs. actual median ~$4,500/mo</span>
+      </div>
+    </div>
+    <div class="slide-num">02 / 08</div>
+  </div>
+
+  <!-- SLIDE 3: METHODOLOGY -->
+  <div class="slide" id="slide-3">
+    <div class="slide-tag anim-in">Methodology</div>
+    <h2 class="display display-md anim-in">Three Academic Frameworks,<br>One Constructed Number</h2>
+    <div class="rule anim-in"></div>
+    <table class="data-table anim-in">
+      <thead>
+        <tr>
+          <th>Framework</th>
+          <th>What It Measures</th>
+          <th>Citation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Glaeser-Gyourko Zoning Tax</strong></td>
+          <td>Price premium above construction cost from zoning supply restrictions</td>
+          <td class="keep">NBER W8835, 2003</td>
+        </tr>
+        <tr>
+          <td><strong>Van Nieuwerburgh Asset Pricing</strong></td>
+          <td>Financialization premium — prices above income-justified fundamentals</td>
+          <td class="keep">Columbia B-School, 2022</td>
+        </tr>
+        <tr>
+          <td><strong>Residual Land Value Model</strong></td>
+          <td>Decompose land cost into genuine scarcity vs. regulatory restriction</td>
+          <td class="keep">UK Planning Guidance; Bertaud (2018)</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>Tokyo Minato-ku Baseline</strong></td>
+          <td>Comparably dense global city with supply-responsive zoning = genuine land value</td>
+          <td class="keep">Japan MLIT Survey</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rule anim-in"></div>
+    <p class="body-text anim-in">Each eliminated premium traces to a named legal instrument — not political preference. The argument is positive, not normative.</p>
+    <div class="slide-num">03 / 08</div>
+  </div>
+
+  <!-- SLIDE 4: DECOMPOSITION -->
+  <div class="slide" id="slide-4">
+    <div class="slide-tag anim-in">The Decomposition</div>
+    <h2 class="display display-md anim-in">Building the <em>Should-Be</em> Price</h2>
+    <table class="data-table anim-in" style="margin-top:2vh">
+      <thead>
+        <tr>
+          <th style="width:35%">Component</th>
+          <th>Actual</th>
+          <th>Should Be</th>
+          <th>Eliminated</th>
+          <th style="width:28%">Legal Instrument</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hard Construction</td>
+          <td>$525</td>
+          <td class="keep">$400</td>
+          <td class="elim">$125</td>
+          <td class="keep" style="font-size:0.6rem">Prevailing wage law; DOB delays</td>
+        </tr>
+        <tr>
+          <td>Soft Costs</td>
+          <td>$105</td>
+          <td class="keep">$40</td>
+          <td class="elim">$65</td>
+          <td class="keep" style="font-size:0.6rem">ULURP legal/consultant fees</td>
+        </tr>
+        <tr>
+          <td>Land — Genuine Scarcity</td>
+          <td>$175</td>
+          <td class="keep">$175</td>
+          <td>$0</td>
+          <td class="keep" style="font-size:0.6rem">Island geography (legitimate)</td>
+        </tr>
+        <tr>
+          <td>Land — Regulatory Premium</td>
+          <td>$325</td>
+          <td class="keep">$0</td>
+          <td class="elim">$325</td>
+          <td class="keep" style="font-size:0.6rem">1961 Zoning Resolution; FAR caps</td>
+        </tr>
+        <tr>
+          <td>Financing Costs</td>
+          <td>$225</td>
+          <td class="keep">$80</td>
+          <td class="elim">$145</td>
+          <td class="keep" style="font-size:0.6rem">ULURP 3–5 yr timeline</td>
+        </tr>
+        <tr>
+          <td>Developer Return — Competitive</td>
+          <td>$75</td>
+          <td class="keep">$75</td>
+          <td>$0</td>
+          <td class="keep" style="font-size:0.6rem">Legitimate 5% IRR</td>
+        </tr>
+        <tr>
+          <td>Developer Return — Monopoly</td>
+          <td>$125</td>
+          <td class="keep">$0</td>
+          <td class="elim">$125</td>
+          <td class="keep" style="font-size:0.6rem">ULURP entry barriers</td>
+        </tr>
+        <tr>
+          <td>Financialization Premium</td>
+          <td>$600</td>
+          <td class="keep">$0</td>
+          <td class="elim">$600</td>
+          <td class="keep" style="font-size:0.6rem">Mortgage deduction; 1031; REITs</td>
+        </tr>
+        <tr class="total-row">
+          <td><strong>TOTAL</strong></td>
+          <td><strong>~$2,155</strong></td>
+          <td><strong>~$770</strong></td>
+          <td><strong>~$1,385</strong></td>
+          <td><strong>64% artificial</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="slide-num">04 / 08</div>
+  </div>
+
+  <!-- SLIDE 5: CORE STATISTICS -->
+  <div class="slide" id="slide-5">
+    <div class="slide-tag anim-in">Core Constructed Statistics</div>
+    <h2 class="display display-md anim-in">Four Numbers That Tell the Story</h2>
+    <div class="rule anim-in"></div>
+    <div class="stats-row anim-in">
+      <div class="stat-card">
+        <div class="num">$770<span style="font-size:1rem">/sqft</span></div>
+        <div class="lbl">Competitive market price — what Manhattan housing should cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">64<span style="font-size:1rem">%</span></div>
+        <div class="lbl">Share of actual price that is legally constructed artificial premium</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">$22<span style="font-size:1rem">B/yr</span></div>
+        <div class="lbl">Annual class transfer from renters & buyers to landowners & finance</div>
+      </div>
+    </div>
+    <div class="rule anim-in"></div>
+    <div class="two-col anim-in">
+      <div>
+        <p class="body-text"><strong style="color:var(--white)">Fair rent, 1-bedroom:</strong> $3,887/month<br>
+        <span style="color:var(--grey-mid)">vs. actual median: ~$4,500/month</span></p>
+      </div>
+      <div>
+        <p class="body-text"><strong style="color:var(--white)">Per unit excess premium:</strong> ~$511,000<br>
+        <span style="color:var(--grey-mid)">× 5% annual return = $25,550/unit/year</span></p>
+      </div>
+    </div>
+    <div class="slide-num">05 / 08</div>
+  </div>
+
+  <!-- SLIDE 6: CLASS ANALYSIS -->
+  <div class="slide" id="slide-6">
+    <div class="slide-tag anim-in">Class Analysis</div>
+    <h2 class="display display-md anim-in">Who Pays — and Who Captures</h2>
+    <div class="rule anim-in"></div>
+    <table class="data-table anim-in">
+      <thead>
+        <tr>
+          <th>Household</th>
+          <th>Income</th>
+          <th>Actual 1BR % of Income</th>
+          <th>Fair 1BR % of Income</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Minimum Wage (FT)</td>
+          <td>$33,280</td>
+          <td class="elim">162%</td>
+          <td class="elim">140%</td>
+          <td class="keep" style="font-size:0.65rem">Excluded either way</td>
+        </tr>
+        <tr>
+          <td>NYC Median Renter</td>
+          <td>$56,000</td>
+          <td class="elim">96%</td>
+          <td class="elim">83%</td>
+          <td class="keep" style="font-size:0.65rem">Excluded either way</td>
+        </tr>
+        <tr>
+          <td>NYC Median Household</td>
+          <td>$76,000</td>
+          <td class="elim">71%</td>
+          <td class="elim">61%</td>
+          <td class="keep" style="font-size:0.65rem">Excluded either way</td>
+        </tr>
+        <tr>
+          <td>Professional Class</td>
+          <td>$120,000</td>
+          <td class="elim">45%</td>
+          <td class="elim">39%</td>
+          <td class="keep" style="font-size:0.65rem">Excluded either way</td>
+        </tr>
+        <tr class="highlight">
+          <td>Upper Middle Class</td>
+          <td>$156,000</td>
+          <td class="elim">35%</td>
+          <td style="color:#aaa">30%</td>
+          <td style="color:#aaa; font-size:0.65rem">Just affordable at fair rent</td>
+        </tr>
+        <tr class="highlight">
+          <td>Affluent</td>
+          <td>$180,000</td>
+          <td style="color:#aaa">30%</td>
+          <td style="color:#aaa">26%</td>
+          <td style="color:#aaa; font-size:0.65rem">Affordable at both</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rule anim-in"></div>
+    <p class="body-text anim-in">Premium captured by: <strong style="color:var(--white)">Manhattan landowners</strong> (~$8B/yr) · <strong style="color:var(--white)">Financial institutions</strong> (~$6B/yr) · <strong style="color:var(--white)">Wealthy asset holders</strong> (~$5B/yr) · <strong style="color:var(--white)">Barrier-protected developers</strong> (~$3B/yr)</p>
+    <div class="slide-num">06 / 08</div>
+  </div>
+
+  <!-- SLIDE 7: TWO PROBLEMS -->
+  <div class="slide" id="slide-7">
+    <div class="slide-tag anim-in">The Central Finding</div>
+    <h2 class="display display-lg anim-in">Two Problems.<br><em>Two Solutions.</em></h2>
+    <div class="rule anim-in"></div>
+    <div class="two-col anim-in">
+      <div class="col-block">
+        <div class="col-head">Problem 1 — Artificial Extraction</div>
+        <div class="col-item">~$613/month above fair rent for a 1BR</div>
+        <div class="col-item">Caused by zoning law, permitting barriers, financialization instruments</div>
+        <div class="col-item">Solution: legal and regulatory reform — FAR increases, ULURP streamlining, financial instrument changes</div>
+        <div class="col-item" style="color:var(--grey-mid); font-style:italic; margin-top:1vh">This is the problem market advocates are right about</div>
+      </div>
+      <div class="col-block">
+        <div class="col-head">Problem 2 — Genuine Production Cost</div>
+        <div class="col-item">$3,887/month fair rent — still unaffordable to 80% of NYC households</div>
+        <div class="col-item">Caused by real construction costs, island geography, capital returns</div>
+        <div class="col-item">Solution: direct public investment — permanently affordable housing, deep capital subsidies, operating support</div>
+        <div class="col-item" style="color:var(--grey-mid); font-style:italic; margin-top:1vh">This is the problem housing justice advocates are right about</div>
+      </div>
+    </div>
+    <div class="rule anim-in"></div>
+    <div class="pullquote anim-in">
+      <p>Market reform is necessary — but even a perfectly deregulated Manhattan would still exclude 80% of its residents.</p>
+    </div>
+    <div class="slide-num">07 / 08</div>
+  </div>
+
+  <!-- SLIDE 8: CONCLUSION -->
+  <div class="slide" id="slide-8">
+    <div class="slide-tag anim-in">Conclusion</div>
+    <h2 class="display display-lg anim-in">$22 Billion.<br><em>Every Year.</em></h2>
+    <div class="rule anim-in"></div>
+    <p class="body-text anim-in">Manhattan's legally constructed housing premiums generate an estimated <strong style="color:var(--white)">$22 billion annually</strong> in transfers from renters and buyers to landowners, financial institutions, and barrier-protected developers. This is not a market outcome. It is a legally enforced class transfer, traceable to specific instruments: the 1961 Zoning Resolution, ULURP permitting procedures, and federal financial tax instruments.</p>
+    <div class="rule anim-in"></div>
+    <div class="stats-row anim-in" style="margin-top:1vh">
+      <div class="stat-card">
+        <div class="num">$770</div>
+        <div class="lbl">Should-be price per sqft<br><span style="color:var(--grey-dark)">vs. actual ~$1,500</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="num">$3,887</div>
+        <div class="lbl">Fair 1BR monthly rent<br><span style="color:var(--grey-dark)">vs. actual ~$4,500</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="num">80%</div>
+        <div class="lbl">NYC households excluded<br><span style="color:var(--grey-dark)">even at competitive prices</span></div>
+      </div>
+    </div>
+    <div class="rule anim-in"></div>
+    <p class="body-text anim-in" style="font-size:0.75rem; color:var(--grey-dark)">Sources: Glaeser & Gyourko (NBER 2003) · Van Nieuwerburgh (Columbia 2022) · NYC Building Congress · NYC PLUTO · Tokyo MLIT · Federal Reserve H.15 · NCREIF · StreetEasy · Census ACS · NYC Rent Guidelines Board</p>
+    <div class="slide-num">08 / 08</div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="ctrl-btn" onclick="prev()">← PREV</button>
+  <span class="ctrl-count" id="ctrl-count">01 / 08</span>
+  <button class="ctrl-btn" onclick="next()">NEXT →</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SPEAKER SCRIPT PANEL
+════════════════════════════════════════════════════════════ -->
+<div class="script-panel" id="scriptPanel">
+  <button class="script-close" onclick="toggleScript()">✕ CLOSE SCRIPT</button>
+  <h2>Speaker Script — 6 Minute Presentation</h2>
+
+  <div class="script-section">
+    <h3>Slide 1 — Title <span class="timing">~0:40</span></h3>
+    <p>Good [morning/afternoon]. I want to start with a paradox. Manhattan has some of the <span class="emphasis">highest rents in the world</span>. A median one-bedroom costs about $4,500 a month — which requires an income of $180,000 a year just to be considered affordable under the standard 30% threshold. The median NYC renter earns $56,000. They are spending 96% of their gross income on rent.</p>
+    <p>So rents are crushing tenants. That part most people know. But here is what is less discussed: <span class="emphasis">landlords are also losing</span>. Manhattan cap rates — the annual yield a landlord earns on the value of their asset — have compressed to about 3%. The historical norm was 5 to 6%. At 3%, the asset is massively overpriced relative to the income it generates. No rational investor buying Manhattan real estate today at market price is earning a normal return.</p>
+    <p>So we have a situation where rent is simultaneously <span class="emphasis">too high for tenants</span> and <span class="emphasis">too low to justify asset prices</span>. That is the paradox this report resolves. If both parties are losing, the price of the asset itself must be wrong. Today I construct what both the asset price and the rent <em>should</em> be.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 2 — The Paradox <span class="timing">~0:50</span></h3>
+    <p>Let me put some numbers behind this paradox. On the tenant side: a one-bedroom apartment in Manhattan rents for around $4,500 a month. At the standard HUD affordability threshold of 30% of income, you need to earn <span class="emphasis">$180,000 a year</span> for that rent to be considered affordable. The median NYC renter earns $56,000. They are spending close to their entire income on housing. That is the tenant's problem.</p>
+    <p>On the landlord side: Manhattan cap rates have compressed to roughly <span class="emphasis">3%</span>. What does that mean? It means if you buy a Manhattan apartment building at today's market price, your annual rental income is only 3% of what you paid. The long-run historical norm for residential real estate is 5 to 6%. At 3%, the math doesn't work — you're overpaying for the asset relative to what it earns.</p>
+    <p>So the paradox is real: <span class="emphasis">rents are too high for the people paying them, and too low to justify the prices of the buildings they live in</span>. The only way to resolve this logically is that the asset price itself is inflated — not by genuine housing value, but by something else. Something that drives up purchase prices without proportionally driving up rents.</p>
+    <p>That something, as I will show, is a bundle of <span class="emphasis">legal instruments</span> — zoning restrictions, permitting barriers, and financial tax treatment — that have inflated the asset value far beyond what legitimate housing economics would produce. Strip those out, and you get a fair asset price of around <span class="emphasis">$770 per square foot</span> and a fair rent of around <span class="emphasis">$3,887 per month</span> for a one-bedroom. Both numbers are lower than today's actuals. Both produce a healthier, more rational market for investors and tenants alike.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 3 — Methodology <span class="timing">~0:45</span></h3>
+    <p>I'm drawing on three established academic frameworks. The first is Glaeser and Gyourko's <span class="emphasis">zoning tax</span> — their 2003 NBER paper showed that Manhattan prices exceed construction costs by a large margin, and they identified zoning as the primary mechanism. Their methodology is peer-reviewed and widely cited.</p>
+    <p>The second is Van Nieuwerburgh's asset pricing approach from Columbia Business School — he compares actual prices to what is justified by discounted future rental income. The gap is the <span class="emphasis">financialization premium</span> — the amount people are paying not for shelter but for a financial asset.</p>
+    <p>The third anchor is Tokyo's Minato-ku district — a city comparable to Manhattan in density and economic productivity, but with more supply-responsive zoning. Tokyo land prices give me a baseline for what <span class="emphasis">genuine locational value</span> looks like without regulatory inflation.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 4 — The Decomposition <span class="timing">~1:15</span></h3>
+    <p>This is the core of the argument. I'm building Manhattan's price from the ground up, component by component, and stripping out each premium that traces to a specific legal instrument.</p>
+    <p>Construction costs: I keep $400 per square foot as a legitimate NYC high-rise premium. I eliminate $125 in regulatory inflation — that's prevailing wage mandates above competitive rates, DOB permitting delays, and SEQRA compliance costs.</p>
+    <p>Land is the biggest story. Manhattan land currently trades at around $500 per square foot of buildable area. I keep $175 — that's the Tokyo comparable, representing genuine island geography. I eliminate $325 that exists <span class="emphasis">purely because the 1961 Zoning Resolution caps FAR below what the market would economically support</span>. That's not scarcity — that's a legal restriction that enriches existing landowners at the expense of everyone else.</p>
+    <p>Financing costs: I keep $80 — legitimate capital costs over a 2-year competitive development timeline. I eliminate $145 that exists because ULURP stretches that timeline to 3 to 5 years. Every extra year is extra carrying cost, and it flows straight to lenders.</p>
+    <p>Developer return: I keep a full competitive 5% IRR — about $75 per square foot. That's legitimate. I eliminate the $125 above that, which exists because ULURP barriers to entry protect established developers from competition. That's monopoly rent, not market return.</p>
+    <p>And finally — the financialization premium. Six hundred dollars per square foot. The entire amount, eliminated. Housing used as a store of wealth for the domestic upper class and global capital has <span class="emphasis">zero legitimacy</span> from a shelter-market perspective. It's enabled by the mortgage interest deduction, 1031 exchange rules, and REIT tax treatment — all federal legal instruments.</p>
+    <p>The result: a competitive market price of approximately <span class="emphasis">$770 per square foot</span>. Against an actual price of around $1,500.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 5 — Core Statistics <span class="timing">~0:30</span></h3>
+    <p>Four numbers from this decomposition. First: <span class="emphasis">$770 per square foot</span> — the competitive market baseline. A typical 700 square foot apartment should cost around $539,000, not $1,050,000.</p>
+    <p>Second: <span class="emphasis">64%</span> of Manhattan's actual average price is artificial premium with no competitive market justification.</p>
+    <p>Third: <span class="emphasis">$22 billion per year</span> in aggregate transfers — from buyers and renters to landowners and finance — enforced by law. That's roughly $2,500 per Manhattan resident per year above what they'd pay in a competitive market.</p>
+    <p>And fourth: translating to rent. A fair one-bedroom in Manhattan should cost around <span class="emphasis">$3,887 per month</span> — covering all legitimate costs at a 6% cap rate, with operating expenses. Against an actual median of about $4,500.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 6 — Class Analysis <span class="timing">~0:30</span></h3>
+    <p>Who pays? Everyone who rents or buys in Manhattan. But the burden is wildly unequal. A minimum wage worker would spend 162% of their income on actual rent — and 140% even at the fair rent. The median NYC renter would spend 96% of income. A professional earning $120,000 would still spend 45%.</p>
+    <p>Only at <span class="emphasis">$156,000 annual income</span> does the fair rent become affordable at the standard 30% threshold. Manhattan excludes the bottom 80% of households even without any legal distortion.</p>
+    <p>Who captures the premium? Manhattan landowners capture about $8 billion annually through the regulatory land premium. Financial institutions capture about $6 billion through extended-timeline financing. Wealthy asset holders capture $5 billion through the financialization premium. And barrier-protected developers capture about $3 billion in above-competitive returns. All four groups benefit from specific legal instruments. None of it is market reward for productive activity.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 7 — Two Problems <span class="timing">~0:30</span></h3>
+    <p>And this brings me to what I think is the most important finding — the one that reframes the whole policy debate.</p>
+    <p>Manhattan's housing crisis has <span class="emphasis">two distinct problems</span> that require two different solutions, and they are constantly conflated. Problem one is artificial extraction — the $613 per month above fair rent that exists because of legal distortions. This is solvable through regulatory reform. This is the problem market advocates are right about.</p>
+    <p>Problem two is that even the <span class="emphasis">fair rent of $3,887 is unaffordable to 80% of NYC households</span>. Manhattan's genuine production costs already exclude most of the city's residents, before any legal distortion enters the picture. This problem requires direct public investment in permanently affordable housing. This is what housing justice advocates are right about.</p>
+    <p>Both sides of this debate are talking about real problems. They're just talking about <span class="emphasis">different parts of the same crisis</span> — and acting as though fixing one fixes both.</p>
+  </div>
+
+  <div class="script-section">
+    <h3>Slide 8 — Conclusion <span class="timing">~0:15</span></h3>
+    <p>To conclude. Manhattan's legally constructed housing premiums generate an estimated <span class="emphasis">$22 billion annually</span> in transfers from renters and buyers to landowners and financial institutions. This is not a market outcome. It is legally constructed extraction, traceable to the 1961 Zoning Resolution, ULURP procedures, and federal financial instruments.</p>
+    <p>The competitive market price is <span class="emphasis">$770 per square foot</span>. Fair rent for a one-bedroom is <span class="emphasis">$3,887 per month</span>. And even at that fair price, <span class="emphasis">80% of New York City households are priced out of Manhattan</span> — not by a broken market, but by the genuine cost of building on one of the world's most productive pieces of land.</p>
+    <p>The policy implication: we need both regulatory reform <em>and</em> public investment — not one or the other. Thank you.</p>
+  </div>
+
+</div><!-- /script-panel -->
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('ctrl-count').textContent =
+      String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+    document.getElementById('progress').style.width =
+      ((current + 1) / total * 100) + '%';
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  function toggleScript() {
+    const p = document.getElementById('scriptPanel');
+    p.classList.toggle('open');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('scriptPanel').classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); prev(); }
+  });
+
+  // init progress
+  goTo(0);
+</script>
+</body>
+</html>
